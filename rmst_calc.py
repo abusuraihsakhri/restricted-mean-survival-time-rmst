@@ -12,7 +12,9 @@ import argparse
 import csv
 import json
 import math
+import os
 import sys
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 
@@ -66,10 +68,28 @@ def process_single(args) -> None:
 
 
 def process_batch(input_csv: str, output_csv: str) -> None:
-    with open(input_csv, mode="r", encoding="utf-8-sig") as f:
+    input_path = Path(input_csv).resolve()
+    output_path = Path(output_csv).resolve()
+
+    # Validate input file exists and is a file
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_csv}")
+    if not input_path.is_file():
+        raise ValueError(f"Input path is not a file: {input_csv}")
+
+    # Validate input file extension
+    if input_path.suffix.lower() not in ('.csv', '.tsv'):
+        raise ValueError(f"Input file must be a CSV or TSV file, got: {input_path.suffix}")
+
+    with open(input_path, mode="r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         fieldnames = list(reader.fieldnames or [])
+        if not fieldnames:
+            raise ValueError(f"Input file has no headers or is empty: {input_csv}")
         rows = list(reader)
+
+    if not rows:
+        print(f"Warning: Input file has headers but no data rows: {input_csv}")
 
     out_fields = fieldnames + ["score", "classification", "clinical_recommendation"]
     out_rows = []
@@ -82,12 +102,15 @@ def process_batch(input_csv: str, output_csv: str) -> None:
         row_dict["clinical_recommendation"] = calc_res["clinical_recommendation"]
         out_rows.append(row_dict)
 
-    with open(output_csv, mode="w", encoding="utf-8", newline="") as f:
+    # Ensure output directory exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_path, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=out_fields)
         writer.writeheader()
         writer.writerows(out_rows)
 
-    print(f"Processed {len(out_rows)} records -> {output_csv}")
+    print(f"Processed {len(out_rows)} records -> {output_path}")
 
 
 def main(argv=None):
@@ -103,15 +126,22 @@ def main(argv=None):
 
     # Batch parser
     batch_parser = subparsers.add_parser("batch", help="Process batch CSV")
-    batch_parser.add_argument("-i", "--input", required=True, help="Input CSV")
-    batch_parser.add_argument("-o", "--output", default="results.csv", help="Output CSV")
+    batch_parser.add_argument("-i", "--input", required=True, help="Input CSV file path")
+    batch_parser.add_argument("-o", "--output", default="results.csv", help="Output CSV file path")
 
     args = parser.parse_args(argv)
 
-    if args.command == "single":
-        args.func(args)
-    elif args.command == "batch":
-        process_batch(args.input, args.output)
+    try:
+        if args.command == "single":
+            args.func(args)
+        elif args.command == "batch":
+            process_batch(args.input, args.output)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except BrokenPipeError:
+        # Handle piping output to commands that close early (e.g., head)
+        sys.exit(0)
 
 
 if __name__ == "__main__":

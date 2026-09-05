@@ -1,7 +1,7 @@
-# Restricted Mean Survival Time Rmst
+# Restricted Mean Survival Time (RMST) Calculator
 
-> **Domain:** Clinical Decision Support & Biomedical Computing  
-> **Reference Guidelines & Standards:** `Standard Clinical Formulations & ISO/IEC Quality Frameworks`
+> **Domain:** Clinical Decision Support & Biomedical Computing
+> **Standards:** CAP / CLSI / ISO Standards
 
 <div align="center">
 
@@ -16,101 +16,203 @@
 
 ---
 
-## 📖 What It Does
+## Overview
 
-Restricted Mean Survival Time (RMST) Difference Calculator
-Calculates area under the Kaplan-Meier curve up to truncation time tau and computes RMST difference between two arms.
+Restricted Mean Survival Time (RMST) Difference Calculator computes the area under the Kaplan-Meier survival curve up to a truncation time tau and calculates the RMST difference between two treatment arms.
 
-Zero-dependency Python implementation with single and batch evaluation.
-Author: Dr. Abu Suraih Sakhri
-License: MIT
+This zero-dependency Python implementation supports single-case evaluation and batch CSV processing, with an enterprise-grade multi-agent supervisor system for clinical decision support.
 
----
-
-## ⚙️ Key Capabilities & Algorithmic Modules
-
-### 🔬 Analytical Functions
-
-- **`calculate_metrics()`**: Core domain algorithm for restricted-mean-survival-time-rmst.
-- **`process_single()`** — calculates and validates process_single parameters.
-- **`process_batch()`** — calculates and validates process_batch parameters.
-- **`main()`** — calculates and validates main parameters.
+**Author:** Dr. Abu Suraih Sakhri
+**License:** MIT
 
 ---
 
-## 📐 Mathematical Formulation & Logic
+## Key Features
 
-```text
-  score = primary_val
-  rounded_score = round(score, 2)
-  res = calculate_metrics(**kwargs)
-  calc_res = calculate_metrics(**r)
-```
+### Core RMST Calculation (`rmst_calc.py`)
+- **`calculate_metrics()`** - Core scoring algorithm with weighted parameter evaluation
+- **`process_single()`** - Evaluate a single case with v1, v2, v3 parameters
+- **`process_batch()`** - Process CSV files with multiple records
+
+### Enterprise Agent System (`agents/`)
+- **Multi-Agent Supervisor** - Orchestrates QC, Safety, and Protocol Conformance workers
+- **Zero-PHI Outbound Guard** - AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers
+- **HMAC-SHA256 Audit Trail** - Cryptographically chained, tamper-evident logging
+- **FastAPI REST API** - OpenAPI endpoints with Prometheus telemetry
+
+### Enrichment Engines (`enrichment.py`)
+- Current State Engine
+- RMST Ratio & Restricted Mean Time Lost (RMTL)
+- Data-Driven Tau Selection (Rust et al.)
+- RMST-Based Sample Size Calculator (Royston & Parmar)
+- ANCOVA-RMST Covariate Adjustment
+- Non-Proportional Hazards Diagnostics
+- RMST Landmark Analysis
 
 ---
 
-## 💻 CLI Quickstart & Usage
+## Installation
 
-### 1. Guided Interactive Mode
 ```bash
-python cli.py
+# Clone the repository
+git clone https://github.com/abusuraihsakhri/restricted-mean-survival-time-rmst.git
+cd restricted-mean-survival-time-rmst
+
+# Install dependencies
+pip install -e .
+
+# Or install with development dependencies
+pip install -e ".[dev]"
 ```
 
-### 2. Direct Parameterized Evaluation
+---
+
+## Usage
+
+### Core RMST Calculator (`rmst_calc.py`)
+
+**Single case evaluation:**
 ```bash
-python cli.py --task-id <value> --target <value> --primary <value> --secondary <value>
+python rmst_calc.py single --v1 14.5 --v2 4.2 --v3 1.8
 ```
 
-### Parameter Reference
-- `--task-id`: Specifies input measurement or parameter value.
-- `--target`: Specifies input measurement or parameter value.
-- `--primary`: Specifies input measurement or parameter value.
-- `--secondary`: Specifies input measurement or parameter value.
-- `--critical`: Specifies input measurement or parameter value.
-- `--status`: Specifies input measurement or parameter value.
-- `--input`: Specifies input measurement or parameter value.
-- `--output`: Specifies input measurement or parameter value.
+**Batch CSV processing:**
+```bash
+python rmst_calc.py batch -i sample.csv -o results.csv
+```
 
-### Input Data Schema
+### Enterprise CLI (`cli.py`)
+
+**Run a single audit task:**
+```bash
+python cli.py audit --task-id TASK-001 --primary 28.5 --secondary 14.2
+```
+
+**Batch process CSV records:**
+```bash
+python cli.py batch -i input.csv -o output.csv
+```
+
+**Verify audit trail integrity:**
+```bash
+python cli.py verify-audit
+```
+
+**Launch FastAPI REST server:**
+```bash
+python cli.py serve --host 127.0.0.1 --port 8000
+```
+
+**Supervisory chat query:**
+```bash
+python cli.py chat "Explain RMST methodology"
+```
+
+### Input Data Schema (Batch CSV)
 
 | Field | Description | Requirement |
 |:------|:------------|:------------|
-| `Patient_ID` | Parameter / observation metric | Required |
-| `v1` | Parameter / observation metric | Required |
-| `v2` | Parameter / observation metric | Required |
-| `v3` | Parameter / observation metric | Required |
+| `Patient_ID` | Patient identifier | Required |
+| `v1` | Primary measurement value | Required |
+| `v2` | Secondary measurement value | Required |
+| `v3` | Tertiary measurement value | Required |
 
 ---
 
-## 🛡️ Security & Enterprise Architecture
+## REST API Endpoints
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
+When running the FastAPI server (`cli.py serve`):
+
+| Endpoint | Method | Description |
+|:---------|:-------|:------------|
+| `/health` | GET | Service health check |
+| `/metrics` | GET | Prometheus-compatible metrics |
+| `/api/audit` | POST | Submit task for evaluation |
+| `/api/chat` | POST | Query supervisory chat |
+| `/api/audit/logs` | GET | Retrieve audit trail |
 
 ---
 
-## 🧪 Testing & Verification
+## Security Features
 
-Run the automated test suite:
+- **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, emails, DOBs, and patient names
+- **HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation
+- **Input Validation:** File existence, format validation, and error handling on all batch operations
+
+**Production Note:** Set the `AUDIT_SECRET_KEY` environment variable for production deployments. Without it, a development key is used with a warning.
+
+---
+
+## Testing
 
 ```bash
+# Run all tests
 pytest -v
+
+# Run with coverage (if pytest-cov installed)
+pytest -v --cov=. --cov-report=term-missing
 ```
 
-Execute high-throughput batch simulation benchmarks:
+### Test Coverage
+- Core RMST calculation and batch processing
+- PHI guard enforcement and security
+- Multi-agent worker evaluations
+- Supervisor consensus and audit trail
+- Enrichment engine suite execution
+- CLI command integration
+
+---
+
+## Simulation & Benchmarking
 
 ```bash
-python simulator.py --tasks 1000 --concurrency 8
+# Run high-throughput simulation (default: 100 iterations)
+python simulator.py
+
+# Run with custom iteration count
+python simulator.py 500
 ```
 
 ---
 
-## 🐳 Container Deployment
+## Docker Deployment
 
 ```bash
+# Build and run with Docker
 docker build -t restricted-mean-survival-time-rmst .
-docker run -p 8000:8000 restricted-mean-survival-time-rmst
+docker run -p 8000:8000 -e AUDIT_SECRET_KEY=your-secret-key restricted-mean-survival-time-rmst
+
+# Or use Docker Compose
+docker-compose up -d
+```
+
+---
+
+## Project Structure
+
+```
+.
+├── rmst_calc.py          # Core RMST calculation engine
+├── cli.py                # Enterprise CLI interface
+├── enrichment.py         # Enrichment engine suite
+├── simulator.py          # High-throughput simulation
+├── sample.csv            # Sample input data
+├── test_rmst_calc.py     # Core calculation tests
+├── pyproject.toml        # Project configuration
+├── Dockerfile            # Container build
+├── docker-compose.yml    # Container orchestration
+├── agents/               # Enterprise agent system
+│   ├── __init__.py
+│   ├── api.py            # FastAPI REST server
+│   ├── base.py           # Security, PHI guard, audit trail
+│   ├── models.py         # Pydantic data models
+│   ├── supervisor.py     # Multi-agent orchestrator
+│   ├── workers.py        # Specialized domain workers
+│   ├── llm_factory.py    # LLM provider factory
+│   ├── metrics.py        # Prometheus metrics
+│   ├── learning.py       # Bayesian calibration engine
+│   └── streamer.py       # WebSocket telemetry
+└── tests/                # Test suite
+    ├── test_enrichment.py
+    └── test_restricted_mean_survival_time_rmst.py
 ```
