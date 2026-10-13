@@ -1,21 +1,64 @@
+"""Reference calculations for unadjusted Kaplan–Meier RMST."""
+import csv
+import json
 import pytest
-from rmst_calc import calculate_metrics, process_batch
+
+from rmst_calc import calculate_metrics, main, process_batch, read_observations
+
+SAMPLE = [
+    {"time": 2, "event": 1, "group": "A"},
+    {"time": 4, "event": 0, "group": "A"},
+    {"time": 6, "event": 1, "group": "A"},
+    {"time": 8, "event": 1, "group": "A"},
+    {"time": 10, "event": 0, "group": "A"},
+    {"time": 3, "event": 1, "group": "B"},
+    {"time": 5, "event": 0, "group": "B"},
+    {"time": 7, "event": 1, "group": "B"},
+    {"time": 9, "event": 0, "group": "B"},
+    {"time": 10, "event": 0, "group": "B"},
+]
 
 
-def test_rmst_calc_single():
-    res = calculate_metrics(v1=12.0, v2=4.0)
-    assert "score" in res
-    assert "classification" in res
-    assert res["score"] > 0
+def test_two_group_reference_result():
+    result = calculate_metrics(SAMPLE, tau=10)
+    assert result["groups"]["A"]["rmst"] == pytest.approx(6.8)
+    assert result["groups"]["B"]["rmst"] == pytest.approx(7.8)
+    assert result["groups"]["A"]["rmtl"] == pytest.approx(3.2)
+    assert result["contrast"]["difference"] == pytest.approx(1)
+    assert result["contrast"]["ratio"] == pytest.approx(7.8 / 6.8)
+    assert result["contrast"]["direction"] == "B minus A"
 
 
-def test_rmst_calc_batch(tmp_path):
-    csv_in = tmp_path / "in.csv"
-    csv_out = tmp_path / "out.csv"
-    csv_in.write_text("Patient,v1,v2\nPat_001,15.0,3.0\nPat_002,5.0,1.0\n", encoding="utf-8")
-    
-    process_batch(str(csv_in), str(csv_out))
-    assert csv_out.exists()
-    content = csv_out.read_text(encoding="utf-8")
-    assert "Pat_001" in content
-    assert "score" in content
+def test_tied_event_and_censor():
+    rows = [{"time": 2, "event": 1}, {"time": 2, "event": 0}, {"time": 4, "event": 1}]
+    result = calculate_metrics(rows, tau=4)
+    assert result["groups"]["All"]["rmst"] == pytest.approx(2 + 2 * (2 / 3))
+    assert result["groups"]["All"]["curve"][1]["survival"] == pytest.approx(2 / 3)
+
+
+def test_no_events():
+    rows = [{"time": 3, "event": 0}, {"time": 5, "event": 0}]
+    result = calculate_metrics(rows, 5)
+    assert result["groups"]["All"]["rmst"] == 5
+    assert result["groups"]["All"]["rmtl"] == 0
+
+
+def test_event_at_time_zero():
+    assert calculate_metrics([{"time": 0, "event": 1}, {"time": 4, "event": 0}], 4)["groups"]["All"]["rmst"] == pytest.approx(2)
+
+
+def test_csv_and_tsv(tmp_path):
+    for extension, sep in (("csv", ","), ("tsv", "\t")):
+        inp = tmp_path / f"observations.{extension}"
+        inp.write_text("time"+sep+"event"+sep+"group\n2"+sep+"1"+sep+"A\n4"+sep+"0"+sep+"A\n", encoding="utf-8")
+        result = process_batch(str(inp), str(tmp_path / f"summary-{extension}.csv"), 4)
+        assert result["groups"]["A"]["rmst"] == pytest.approx(3)
+        with (tmp_path / f"summary-{extension}.csv").open() as stream:
+            rows = list(csv.DictReader(stream))
+        assert len(rows) == 1 and rows[0]["group"] == "A"
+        assert float(rows[0]["rmst"]) == pytest.approx(3)
+
+
+def test_inline_cli(capsys):
+    assert main(["single","--times","2","4","--events","1","0","--tau","4"]) == 0
+    assert json.loads(capsys.readouterr().out)["groups"]["All"]["rmst"] == pytest.approx(3)
