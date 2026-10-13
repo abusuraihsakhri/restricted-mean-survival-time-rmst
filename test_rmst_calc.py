@@ -70,3 +70,17 @@ def test_api_endpoint_without_network():
             SurvivalObservation(time=4, event=0)]
     result = api_rmst(RmstRequest(tau=4, observations=rows))
     assert result["groups"]["All"]["rmst"] == pytest.approx(3)
+
+
+def test_legacy_batch_false_flag_is_not_truthy(tmp_path):
+    from cli import main as audit_main
+    source = tmp_path / "audit.csv"
+    output = tmp_path / "audit-out.csv"
+    source.write_text(
+        "task_id,target_identifier,primary_metric,secondary_metric,status_descriptor,is_critical_flag\n"
+        "T1,KEY-01,10,0,NOMINAL,False\n", encoding="utf-8"
+    )
+    assert audit_main(["batch", "-i", str(source), "-o", str(output)]) == 0
+    with output.open(newline="") as stream:
+        row = next(csv.DictReader(stream))
+    assert row["overall_urgency"] == "ROUTINE"
