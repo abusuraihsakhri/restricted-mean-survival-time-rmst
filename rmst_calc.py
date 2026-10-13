@@ -146,8 +146,10 @@ def process_batch(input_csv: str, output_csv: str, tau: float) -> dict[str, Any]
         writer = csv.DictWriter(stream, fieldnames=["group", "tau", "n", "events", "censored", "rmst", "rmtl"])
         writer.writeheader()
         for group, values in result["groups"].items():
+            # Neutralize spreadsheet formula prefixes in user-supplied group labels.
+            safe_group = "'" + group if group.lstrip().startswith(("=", "+", "-", "@")) else group
             writer.writerow({key: value for key, value in {
-                "group": group, "tau": result["tau"], **values
+                "group": safe_group, "tau": result["tau"], **values
             }.items() if key in writer.fieldnames})
     return result
 
