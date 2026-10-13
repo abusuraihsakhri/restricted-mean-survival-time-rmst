@@ -62,3 +62,11 @@ def test_csv_and_tsv(tmp_path):
 def test_inline_cli(capsys):
     assert main(["single","--times","2","4","--events","1","0","--tau","4"]) == 0
     assert json.loads(capsys.readouterr().out)["groups"]["All"]["rmst"] == pytest.approx(3)
+
+
+def test_api_endpoint_without_network():
+    from agents.api import RmstRequest, SurvivalObservation, api_rmst
+    rows = [SurvivalObservation(time=2, event=1),
+            SurvivalObservation(time=4, event=0)]
+    result = api_rmst(RmstRequest(tau=4, observations=rows))
+    assert result["groups"]["All"]["rmst"] == pytest.approx(3)
