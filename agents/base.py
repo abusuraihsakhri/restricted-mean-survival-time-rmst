@@ -30,7 +30,7 @@ PHI_PATTERNS = [
 
 
 class SecurityException(Exception):
-    """Raised when outbound data violates HIPAA Safe Harbor or contains raw PHI."""
+    """Raised when outbound data matches a configured sensitive-identifier pattern."""
     pass
 
 
@@ -61,7 +61,7 @@ class PHIGuard:
 
 
 class AuditTrail:
-    """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
+    """In-process HMAC-SHA256 chained audit log (not durable storage)."""
     def __init__(self, secret_key: Optional[str] = None):
         resolved_key = secret_key or os.getenv("AUDIT_SECRET_KEY", DEFAULT_DEV_KEY)
         if resolved_key == DEFAULT_DEV_KEY:
@@ -95,14 +95,25 @@ class AuditTrail:
         return entry
 
     def verify_integrity(self) -> bool:
-        for i, entry in enumerate(self.logs):
-            prev = self.logs[i-1]["current_hash"] if i > 0 else "GENESIS_BLOCK_0000000000000000"
-            if entry["prev_hash"] != prev:
+        """Validate both chain links and the HMAC for every entry."""
+        prev = "GENESIS_BLOCK_0000000000000000"
+        for entry in self.logs:
+            if entry.get("prev_hash") != prev:
                 return False
+            try:
+                parts = (entry["audit_id"], entry["timestamp"], entry["actor"],
+                         entry["actor_tier"], entry["event_type"],
+                         entry["payload_hash"], entry["prev_hash"])
+            except KeyError:
+                return False
+            expected = hmac.new(self.secret_key, "|".join(parts).encode("utf-8"), hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(expected, str(entry.get("current_hash", ""))):
+                return False
+            prev = expected
         return True
 
     def get_trail(self) -> List[Dict[str, Any]]:
-        return self.logs
+        return [entry.copy() for entry in self.logs]
 
 
 GLOBAL_AUDIT = AuditTrail()
