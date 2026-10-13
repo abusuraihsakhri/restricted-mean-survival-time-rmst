@@ -1,236 +1,235 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restricted Mean Survival Time Rmst — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Restricted Mean Survival Time (RMST) Calculator</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17263c;background:#f5f7fb}
+*{box-sizing:border-box}body{margin:0;padding:0 1rem 3rem}main{max-width:1120px;margin:auto}
+header{background:#132846;color:#fff;margin:0 -1rem 1.6rem;padding:2rem max(1rem,calc((100vw - 1120px)/2))}
+header h1{font-size:clamp(1.6rem,3.5vw,2.4rem);margin:0 0 .4rem}header p{max-width:820px;line-height:1.5;margin:.3rem 0;color:#dbe5f3}
+small,.muted{color:#52647c}.layout{display:grid;grid-template-columns:minmax(300px,1fr) minmax(340px,1.1fr);gap:1.1rem}
+section{background:white;border:1px solid #d7e1ed;border-radius:12px;padding:1.35rem;box-shadow:0 2px 10px #233a5210}
+h2{font-size:1.12rem;margin:0 0 .85rem}label{display:block;font-weight:600;margin:.8rem 0 .35rem}
+input[type="number"],textarea,input[type="file"]{width:100%;border:1px solid #acbed1;border-radius:7px;padding:.7rem;background:#fff;color:#18283d;font:inherit}
+textarea{font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:200px;resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #86b6fa;outline-offset:2px}
+button{background:#1662b7;color:white;border:0;border-radius:7px;padding:.73rem 1.1rem;font-weight:650;cursor:pointer;margin:.7rem .5rem .2rem 0}
+button:hover{background:#104e93}button.secondary{color:#164b84;background:#e9f1fb}
+button.secondary:hover{background:#d8e6f8}button:disabled{opacity:.5;cursor:not-allowed}
+.notice{font-size:.9rem;background:#edf5ff;border-left:4px solid #2b78c8;padding:.8rem;margin:.9rem 0;line-height:1.5}
+#error{color:#a4161a;min-height:1.4rem;font-weight:600;margin:.6rem 0;white-space:pre-wrap}
+#results[hidden],#figure[hidden]{display:none}.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.8rem}
+.value{font-size:1.5rem;font-weight:750;color:#174a88;margin:.3rem 0}.caption{font-size:.78rem;color:#51647b}
+.metric{background:#f4f8fd;padding:.8rem;border-radius:8px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:.65rem .55rem;border-bottom:1px solid #dfE5ee;text-align:left;white-space:nowrap}
+th{font-size:.83rem;color:#475870}td{font-size:.92rem}svg{width:100%;height:auto;display:block;background:#fff}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.85rem;margin:.6rem 0}.legend span:before{content:"";display:inline-block;width:1rem;height:3px;margin:0 .4rem .2rem 0;background:var(--line)}
+footer{max-width:1120px;margin:1.5rem auto;color:#51647b;font-size:.86rem;line-height:1.5}
+@media(max-width:800px){.layout{grid-template-columns:1fr}header{padding:1.4rem 1rem}section{padding:1rem}}
+</style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Restricted Mean Survival Time Rmst</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Restricted Mean Survival Time Rmst Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "restricted-mean-survival-time-rmst",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+<header><h1>Restricted Mean Survival Time</h1><p>Kaplan–Meier RMST and restricted mean time lost (RMTL) for right-censored survival data. Compare up to two groups at a common truncation horizon τ.</p></header>
+<main>
+<div class="layout">
+<section>
+<h2>1. Survival data</h2>
+<p class="muted">Enter individual-level observations or select a local CSV/TSV file. Required columns: <code>time,event</code>; optional <code>group</code>. Event: 1 = event, 0 = right censored.</p>
+<label for="upload">Import CSV or TSV</label><input id="upload" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values">
+<label for="data">Observations</label>
+<textarea id="data" spellcheck="false" aria-describedby="format"></textarea>
+<div id="format" class="muted" style="font-size:.82rem">One observation per row. Times must be finite, nonnegative, in consistent units.</div>
+<label for="tau">Truncation time (τ)</label><input id="tau" type="number" step="any" min="0" value="10" required>
+<div><button type="button" id="calculate">Calculate RMST</button><button type="button" class="secondary" id="sample">Load example</button></div>
+<div id="error" role="alert" aria-live="assertive"></div>
+<div class="notice">All calculations run in this browser. Uploaded files are not sent to a server. τ must not exceed the largest observed time within either group; values beyond observed follow-up are not extrapolated.</div>
+</section>
+<section>
+<h2>2. Estimates</h2>
+<div id="placeholder" class="muted">Load an example or enter survival observations, then select <strong>Calculate RMST</strong>.</div>
+<div id="results" hidden>
+<div class="summary" id="headline"></div>
+<div class="table-wrap" style="margin-top:1rem"><table><thead><tr><th>Group</th><th>N</th><th>Events</th><th>Censored</th><th>RMST</th><th>RMTL</th></tr></thead><tbody id="table-body"></tbody></table></div>
+<p class="muted" id="contrast-detail" style="font-size:.83rem;margin-top:.9rem"></p>
+<div id="figure" hidden>
+<h2 style="margin-top:1.5rem">Kaplan–Meier survival curves</h2>
+<svg id="plot" viewBox="0 0 640 335" role="img" aria-label="Kaplan–Meier survival step plot"></svg>
+<div id="legend" class="legend"></div>
+</div>
+<button type="button" class="secondary" id="export" disabled>Export summary CSV</button>
+<p class="muted" style="font-size:.82rem">Descriptive, unadjusted KM estimates only. No confidence intervals or hypothesis tests. The RMST difference is comparison minus reference (alphabetical group order); positive means greater observed event-free time under this event definition.</p>
+</div>
+</section>
+</div>
+</main>
+<footer>RMST(τ) = ∫₀ᵗᵃᵘ Ŝ(t) dt; RMTL(τ) = τ − RMST(τ). This is a research/statistical utility, not a clinical decision rule. Censoring should be non-informative for Kaplan–Meier interpretation. <a href="https://github.com/abusuraihsakhri/restricted-mean-survival-time-rmst">Source repository</a>.</footer>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const example = "time,event,group\n2,1,A\n4,0,A\n6,1,A\n8,1,A\n10,0,A\n3,1,B\n5,0,B\n7,1,B\n9,0,B\n10,0,B";
+let latest = null;
+function finiteNumber(raw, field) {
+  if (String(raw).trim() === "") throw Error(field + " is missing");
+  const v = Number(raw);
+  if (!Number.isFinite(v)) throw Error(field + " must be finite");
+  return v;
+}
+function csvRows(text) {
+  const source = text.replace(/^\uFEFF/, "");
+  const header = source.split(/\r?\n/,1)[0];
+  const separator = header.includes("\t") && !header.includes(",") ? "\t" : ",";
+  const rows = []; let row=[], cell="", quoted=false, closed=false;
+  for(let i=0;i<source.length;i++) {
+    const c=source[i];
+    if(quoted) {
+      if(c==='"') {
+        if(source[i+1]==='"'){cell+='"';i++;}
+        else {quoted=false;closed=true;}
+      } else {cell+=c;}
+    } else if(c==='"') {
+      if(cell.length||closed) throw Error("Malformed quoted field");
+      quoted=true;
+    } else if(c===separator) {row.push(cell);cell="";closed=false;}
+    else if(c==="\r"||c==="\n") {
+      if(c==="\r" && source[i+1]==="\n") i++;
+      row.push(cell);
+      if(row.some(value=>value.trim()!=="")) rows.push(row);
+      row=[];cell="";closed=false;
+    } else {if(closed && !/\s/.test(c)) throw Error("Characters after closing quote");cell+=c;}
+  }
+  if(quoted) throw Error("Unterminated quoted field");
+  row.push(cell);if(row.some(value=>value.trim()!==""))rows.push(row);
+  return rows;
+}
+function parseData(text) {
+  if(text.length>5_000_000) throw Error("Input exceeds 5 MB");
+  const rows=csvRows(text);
+  if(rows.length<2) throw Error("Provide headers and at least one observation");
+  const headers=rows.shift().map(x=>x.trim().toLowerCase());
+  if(new Set(headers).size!==headers.length) throw Error("Duplicate column headers");
+  const timeIdx=headers.indexOf("time"), eventIdx=headers.indexOf("event"), groupIdx=headers.indexOf("group");
+  if(timeIdx<0||eventIdx<0) throw Error("Required columns: time and event");
+  if(rows.length>100000) throw Error("Limit: 100,000 observations");
+  return rows.map((fields,i)=>{
+    if(fields.length!==headers.length) throw Error("Row "+(i+2)+": incorrect number of fields");
+    const time=finiteNumber(fields[timeIdx],"Row "+(i+2)+" time");
+    if(time<0) throw Error("Row "+(i+2)+": time cannot be negative");
+    const eventStr=fields[eventIdx].trim();
+    if(eventStr!=="0"&&eventStr!=="1"&&eventStr!=="0.0"&&eventStr!=="1.0") throw Error("Row "+(i+2)+": event must be 0 or 1");
+    const group=groupIdx<0?"All":fields[groupIdx].trim();
+    if(!group) throw Error("Row "+(i+2)+": group cannot be empty");
+    return {time,event:Number(eventStr),group};
+  });
+}
+function estimate(records,tau) {
+  const counts=new Map();
+  for(const r of records){const c=counts.get(r.time)||[0,0];c[r.event?0:1]++;counts.set(r.time,c);}
+  let n=records.length,s=1,prev=0,area=0;
+  const curve=[{time:0,survival:1}];
+  const times=[...counts.keys()].sort((a,b)=>a-b);
+  for(const time of times){
+    if(time>tau) break;
+    const [deaths,censored]=counts.get(time);
+    area+=(time-prev)*s;
+    s*=1-deaths/n;
+    n-=deaths+censored;
+    prev=time;
+    curve.push({time,survival:Math.max(0,s)});
+  }
+  area+=(tau-prev)*s;
+  area=Math.max(0,Math.min(tau,area));
+  const events=records.reduce((sum,r)=>sum+r.event,0);
+  return {n:records.length,events,censored:records.length-events,rmst:area,rmtl:tau-area,curve};
+}
+function calculate(rows,tau){
+  if(!(tau>0)&&Number.isFinite(tau)) throw Error("τ must be greater than 0");
+  if(!Number.isFinite(tau)) throw Error("τ must be finite");
+  const groups=new Map();
+  for(const r of rows){if(!groups.has(r.group)) groups.set(r.group,[]);groups.get(r.group).push(r);}
+  if(groups.size>2) throw Error("Only one or two groups are supported");
+  const output={tau,groups:{},contrast:null};
+  for(const [name,observations] of [...groups].sort((a,b)=>a[0].localeCompare(b[0],"en"))){
+    const max=observations.reduce((maximum,row)=>Math.max(maximum,row.time),0);
+    if(tau>max)throw Error("τ exceeds observed follow-up in group "+name+" (max "+max+")");
+    output.groups[name]=estimate(observations,tau);
+  }
+  const labels=Object.keys(output.groups);
+  if(labels.length===2){
+    const [a,b]=labels.map(k=>output.groups[k].rmst);
+    output.contrast={reference:labels[0],comparison:labels[1],difference:b-a,ratio:a>0?b/a:null};
+  }
+  return output;
+}
+function format(n){return n===null?"N/A":Number(n).toLocaleString(undefined,{maximumFractionDigits:4});}
+function el(name,cls,txt){const node=document.createElement(name);if(cls)node.className=cls;if(txt!==undefined)node.textContent=txt;return node;}
+function draw(result){
+  const svg=$("plot");svg.replaceChildren();
+  const ns="http://www.w3.org/2000/svg",w=640,h=335,l=52,r=18,t=20,b=46,x=v=>l+v/result.tau*(w-l-r),y=v=>h-b-v*(h-t-b);
+  const line=(x1,y1,x2,y2,color="#cbd5e1",stroke=1)=>{
+    const n=document.createElementNS(ns,"line");for(const [k,v] of Object.entries({x1,y1,x2,y2,stroke:color,"stroke-width":stroke}))n.setAttribute(k,String(v));svg.append(n);
+  };
+  const label=(value,xx,yy,anchor="middle")=>{
+    const n=document.createElementNS(ns,"text");n.setAttribute("x",xx);n.setAttribute("y",yy);n.setAttribute("fill","#50617c");n.setAttribute("font-size","13");n.setAttribute("text-anchor",anchor);n.textContent=value;svg.append(n);
+  };
+  for(let i=0;i<=4;i++){const v=i/4;line(l,y(v),w-r,y(v));label(v.toFixed(2),l-8,y(v)+4,"end");}
+  for(let i=0;i<=4;i++){const v=result.tau*i/4;line(x(v),t,x(v),h-b);label(format(v),x(v),h-b+20);}
+  label("Time",l+(w-l-r)/2,h-7);label("Survival probability",l+85,14,"start");
+  const colors=["#1768b5","#e07825"];const legend=$("legend");legend.replaceChildren();
+  Object.entries(result.groups).forEach(([group,values],i)=>{
+    const path=document.createElementNS(ns,"path");let d="M"+x(0)+" "+y(1),prev=1;
+    for(const point of values.curve.slice(1)){
+      d+=" L"+x(point.time)+" "+y(prev)+" L"+x(point.time)+" "+y(point.survival);
+      prev=point.survival;
+    }
+    d+=" L"+x(result.tau)+" "+y(prev);
+    path.setAttribute("d",d);path.setAttribute("fill","none");path.setAttribute("stroke",colors[i]);path.setAttribute("stroke-width","2.5");svg.append(path);
+    const item=el("span",null,group);item.style.setProperty("--line",colors[i]);legend.append(item);
+  });
+}
+function render(result){
+  $("results").hidden=false;$("placeholder").hidden=true;
+  const cards=$("headline");cards.replaceChildren();
+  const pairs=[["τ",format(result.tau)]];
+  if(result.contrast){pairs.push(["RMST difference",format(result.contrast.difference)],["RMST ratio",format(result.contrast.ratio)]);}
+  else {pairs.push(["RMST",format(Object.values(result.groups)[0].rmst)],["RMTL",format(Object.values(result.groups)[0].rmtl)]);}
+  for(const [name,value] of pairs){const box=el("div","metric");box.append(el("div","caption",name),el("div","value",value));cards.append(box);}
+  const body=$("table-body");body.replaceChildren();
+  for(const [name,v] of Object.entries(result.groups)){
+    const tr=el("tr");for(const field of [name,v.n,v.events,v.censored,format(v.rmst),format(v.rmtl)])tr.append(el("td",null,String(field)));body.append(tr);
+  }
+  $("contrast-detail").textContent=result.contrast?
+    "Comparison: "+result.contrast.comparison+" minus "+result.contrast.reference+"; no inferential uncertainty has been estimated.":
+    "Single-group descriptive RMST.";
+  $("figure").hidden=false;draw(result);$("export").disabled=false;
+}
+function error(message){$("error").textContent=message;$("results").hidden=true;$("placeholder").hidden=false;$("export").disabled=true;latest=null;}
+$("sample").addEventListener("click",()=>{$("data").value=example;$("tau").value="10";error("");});
+$("calculate").addEventListener("click",()=>{
+  try{const rows=parseData($("data").value);const tau=finiteNumber($("tau").value,"τ");latest=calculate(rows,tau);$("error").textContent="";render(latest);}
+  catch(ex){error(ex.message||String(ex));}
+});
+$("upload").addEventListener("change",async e=>{
+  const file=e.target.files[0];if(!file)return;
+  if(file.size>5_000_000){error("File exceeds 5 MB");return;}
+  try{$("data").value=await file.text();error("");}catch(ex){error("Could not read local file: "+ex.message);}
+});
+$("export").addEventListener("click",()=>{
+  if(!latest)return;
+  const rows=[["group","tau","n","events","censored","rmst","rmtl"].join(",")];
+  for(const [group,v] of Object.entries(latest.groups)){
+    const safe=/^\s*[=+@-]/.test(group) ? "'"+group : group;
+    const escaped='"'+safe.replace(/"/g,'""')+'"';
+    rows.push([escaped,latest.tau,v.n,v.events,v.censored,v.rmst,v.rmtl].join(","));
+  }
+  const blob=new Blob([rows.join("\r\n")+"\r\n"],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob),link=document.createElement("a");
+  link.href=url;link.download="rmst-summary.csv";document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$("sample").click();
+</script>
 </body>
 </html>

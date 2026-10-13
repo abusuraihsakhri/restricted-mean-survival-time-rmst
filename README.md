@@ -1,218 +1,63 @@
 # Restricted Mean Survival Time (RMST) Calculator
 
-> **Domain:** Clinical Decision Support & Biomedical Computing
-> **Standards:** CAP / CLSI / ISO Standards
+### [Open the browser application →](https://abusuraihsakhri.github.io/restricted-mean-survival-time-rmst/)
 
-<div align="center">
+A descriptive Kaplan–Meier restricted mean survival time calculator for individual-level right-censored time-to-event data. Calculate single-group RMST/RMTL or compare two groups at a common truncation horizon τ. Time units carry through to the estimates (days, months, etc.).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+## Features
 
-</div>
+- **RMST:** area beneath the right-continuous Kaplan–Meier estimate from 0 through τ.
+- **RMTL:** τ − RMST.
+- **Two-group comparison:** RMST difference and ratio (comparison/reference; groups sorted by label).
+- **Browser:** paste or import CSV/TSV, display KM curves, export an aggregate CSV. Pure JavaScript; no backend, account, installation, Python runtime or external API is required.
+- **Python:** standard-library-only statistical estimator, CSV/TSV reader, summary export, and console interface; see `rmst_calc.py`.
+- **Optional backend:** `/api/rmst` FastAPI endpoint plus a separate legacy audit demonstration.
 
----
+## Use the application
 
-## Overview
+Open the [browser calculator](https://abusuraihsakhri.github.io/restricted-mean-survival-time-rmst/) or use `web/index.html` locally. Select **Load example**, or paste/upload data and specify τ. The browser processes observations locally; it does not transmit or store uploaded data. No identifying patient information is required or recommended.
 
-Restricted Mean Survival Time (RMST) Difference Calculator computes the area under the Kaplan-Meier survival curve up to a truncation time tau and calculates the RMST difference between two treatment arms.
+Input columns (case-sensitive in Python, case-insensitive in the browser):
 
-This zero-dependency Python implementation supports single-case evaluation and batch CSV processing, with an enterprise-grade multi-agent supervisor system for clinical decision support.
+| Column | Meaning |
+| --- | --- |
+| `time` | Nonnegative finite follow-up time |
+| `event` | 1 = event occurred, 0 = right censored |
+| `group` | Optional arm label; omit for one group |
 
-**Author:** Dr. Abu Suraih Sakhri
-**License:** MIT
+For example, see [sample.csv](sample.csv). The same τ is used in both groups and must not exceed each group's maximum observed follow-up. Missing/invalid observations, negative times, nonfinite values, and more than two groups are rejected. For inference, censoring should be independent of the event time; the unadjusted estimator does not correct confounding.
 
----
+## Run with Python
 
-## Key Features
-
-### Core RMST Calculation (`rmst_calc.py`)
-- **`calculate_metrics()`** - Core scoring algorithm with weighted parameter evaluation
-- **`process_single()`** - Evaluate a single case with v1, v2, v3 parameters
-- **`process_batch()`** - Process CSV files with multiple records
-
-### Enterprise Agent System (`agents/`)
-- **Multi-Agent Supervisor** - Orchestrates QC, Safety, and Protocol Conformance workers
-- **Zero-PHI Outbound Guard** - AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers
-- **HMAC-SHA256 Audit Trail** - Cryptographically chained, tamper-evident logging
-- **FastAPI REST API** - OpenAPI endpoints with Prometheus telemetry
-
-### Enrichment Engines (`enrichment.py`)
-- Current State Engine
-- RMST Ratio & Restricted Mean Time Lost (RMTL)
-- Data-Driven Tau Selection (Rust et al.)
-- RMST-Based Sample Size Calculator (Royston & Parmar)
-- ANCOVA-RMST Covariate Adjustment
-- Non-Proportional Hazards Diagnostics
-- RMST Landmark Analysis
-
----
-
-## Installation
+Python 3.10+ is supported.
 
 ```bash
-# Clone the repository
 git clone https://github.com/abusuraihsakhri/restricted-mean-survival-time-rmst.git
 cd restricted-mean-survival-time-rmst
-
-# Install dependencies
-pip install -e .
-
-# Or install with development dependencies
-pip install -e ".[dev]"
+python -m pip install -e ".[dev]"
+python rmst_calc.py batch -i sample.csv -o results.csv --tau 10
+python rmst_calc.py single --times 2 4 6 --events 1 0 1 --tau 6
+python -m pytest -q
 ```
 
----
+The installed `rmst` command runs the statistical calculator. The separate `rmst-audit` command runs the legacy audit demonstration (`cli.py`), which is not a validated clinical tool. The `enrichment.py` classes provide generic threshold demonstrations; **they do not implement** covariate-adjusted RMST, Rust-style τ selection, power calculations, Schoenfeld diagnostics, or other methods suggested by their class names.
 
-## Usage
+## Optional API and Docker
 
-### Core RMST Calculator (`rmst_calc.py`)
-
-**Single case evaluation:**
-```bash
-python rmst_calc.py single --v1 14.5 --v2 4.2 --v3 1.8
-```
-
-**Batch CSV processing:**
-```bash
-python rmst_calc.py batch -i sample.csv -o results.csv
-```
-
-### Enterprise CLI (`cli.py`)
-
-**Run a single audit task:**
-```bash
-python cli.py audit --task-id TASK-001 --primary 28.5 --secondary 14.2
-```
-
-**Batch process CSV records:**
-```bash
-python cli.py batch -i input.csv -o output.csv
-```
-
-**Verify audit trail integrity:**
-```bash
-python cli.py verify-audit
-```
-
-**Launch FastAPI REST server:**
 ```bash
 python cli.py serve --host 127.0.0.1 --port 8000
+# POST /api/rmst with:
+# {"tau": 10, "observations": [{"time": 2, "event": 1, "group": "A"}, ...]}
 ```
 
-**Supervisory chat query:**
-```bash
-python cli.py chat "Explain RMST methodology"
-```
+For the Docker service, supply a unique secret via `AUDIT_SECRET_KEY` before running `docker compose up --build`. The demo audit log is **in-memory only**, its HMAC chain is not an immutable or persistent record, and identifier-pattern filtering is not a comprehensive PHI detection or de-identification mechanism. Do not deploy the unauthenticated legacy audit API with sensitive information.
 
-### Input Data Schema (Batch CSV)
+## Interpretation and limitations
 
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `Patient_ID` | Patient identifier | Required |
-| `v1` | Primary measurement value | Required |
-| `v2` | Secondary measurement value | Required |
-| `v3` | Tertiary measurement value | Required |
+RMST(τ) = ∫₀^τ Ŝ(t)dt measures time free of the defined event during the first τ time units. A positive RMST difference means the comparison group has a higher estimated restricted event-free time than the reference group. Ratios are unavailable if the reference RMST is zero.
 
----
+**No confidence intervals, hypothesis tests, covariate adjustment, competing-risks analysis, or clinical risk classification are provided.** Results are descriptive and must not be used as a clinical decision rule.
 
-## REST API Endpoints
+## Technology and compatibility
 
-When running the FastAPI server (`cli.py serve`):
-
-| Endpoint | Method | Description |
-|:---------|:-------|:------------|
-| `/health` | GET | Service health check |
-| `/metrics` | GET | Prometheus-compatible metrics |
-| `/api/audit` | POST | Submit task for evaluation |
-| `/api/chat` | POST | Query supervisory chat |
-| `/api/audit/logs` | GET | Retrieve audit trail |
-
----
-
-## Security Features
-
-- **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, emails, DOBs, and patient names
-- **HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation
-- **Input Validation:** File existence, format validation, and error handling on all batch operations
-
-**Production Note:** Set the `AUDIT_SECRET_KEY` environment variable for production deployments. Without it, a development key is used with a warning.
-
----
-
-## Testing
-
-```bash
-# Run all tests
-pytest -v
-
-# Run with coverage (if pytest-cov installed)
-pytest -v --cov=. --cov-report=term-missing
-```
-
-### Test Coverage
-- Core RMST calculation and batch processing
-- PHI guard enforcement and security
-- Multi-agent worker evaluations
-- Supervisor consensus and audit trail
-- Enrichment engine suite execution
-- CLI command integration
-
----
-
-## Simulation & Benchmarking
-
-```bash
-# Run high-throughput simulation (default: 100 iterations)
-python simulator.py
-
-# Run with custom iteration count
-python simulator.py 500
-```
-
----
-
-## Docker Deployment
-
-```bash
-# Build and run with Docker
-docker build -t restricted-mean-survival-time-rmst .
-docker run -p 8000:8000 -e AUDIT_SECRET_KEY=your-secret-key restricted-mean-survival-time-rmst
-
-# Or use Docker Compose
-docker-compose up -d
-```
-
----
-
-## Project Structure
-
-```
-.
-├── rmst_calc.py          # Core RMST calculation engine
-├── cli.py                # Enterprise CLI interface
-├── enrichment.py         # Enrichment engine suite
-├── simulator.py          # High-throughput simulation
-├── sample.csv            # Sample input data
-├── test_rmst_calc.py     # Core calculation tests
-├── pyproject.toml        # Project configuration
-├── Dockerfile            # Container build
-├── docker-compose.yml    # Container orchestration
-├── agents/               # Enterprise agent system
-│   ├── __init__.py
-│   ├── api.py            # FastAPI REST server
-│   ├── base.py           # Security, PHI guard, audit trail
-│   ├── models.py         # Pydantic data models
-│   ├── supervisor.py     # Multi-agent orchestrator
-│   ├── workers.py        # Specialized domain workers
-│   ├── llm_factory.py    # LLM provider factory
-│   ├── metrics.py        # Prometheus metrics
-│   ├── learning.py       # Bayesian calibration engine
-│   └── streamer.py       # WebSocket telemetry
-└── tests/                # Test suite
-    ├── test_enrichment.py
-    └── test_restricted_mean_survival_time_rmst.py
-```
+The browser interface uses standard HTML, CSS, SVG and JavaScript (modern desktop/mobile browsers; no Pyodide). The Python package uses the standard library for RMST and FastAPI/Pydantic/Uvicorn for its optional backend. GitHub Actions tests Python 3.10–3.12 and Node.js browser logic. MIT license: [LICENSE](LICENSE).
