@@ -40,7 +40,7 @@ python rmst_calc.py single --times 2 4 6 --events 1 0 1 --tau 6
 python -m pytest -q
 ```
 
-The `rmst` installed entry point runs the **separate legacy audit demonstration** (`cli.py`); for statistical analysis use `python rmst_calc.py`. The `enrichment.py` classes provide generic threshold demonstrations; **they do not implement** covariate-adjusted RMST, Rust-style τ selection, power calculations, Schoenfeld diagnostics, or other methods suggested by their class names.
+The installed `rmst` command runs the statistical calculator. The separate `rmst-audit` command runs the legacy audit demonstration (`cli.py`), which is not a validated clinical tool. The `enrichment.py` classes provide generic threshold demonstrations; **they do not implement** covariate-adjusted RMST, Rust-style τ selection, power calculations, Schoenfeld diagnostics, or other methods suggested by their class names.
 
 ## Optional API and Docker
 
