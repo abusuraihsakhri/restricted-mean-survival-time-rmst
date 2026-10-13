@@ -152,7 +152,7 @@ function calculate(rows,tau){
   if(groups.size>2) throw Error("Only one or two groups are supported");
   const output={tau,groups:{},contrast:null};
   for(const [name,observations] of [...groups].sort((a,b)=>a[0].localeCompare(b[0],"en"))){
-    const max=Math.max(...observations.map(x=>x.time));
+    const max=observations.reduce((maximum,row)=>Math.max(maximum,row.time),0);
     if(tau>max)throw Error("τ exceeds observed follow-up in group "+name+" (max "+max+")");
     output.groups[name]=estimate(observations,tau);
   }
@@ -220,7 +220,8 @@ $("export").addEventListener("click",()=>{
   if(!latest)return;
   const rows=[["group","tau","n","events","censored","rmst","rmtl"].join(",")];
   for(const [group,v] of Object.entries(latest.groups)){
-    const escaped='"'+group.replace(/"/g,'""')+'"';
+    const safe=/^\s*[=+@-]/.test(group) ? "'"+group : group;
+    const escaped='"'+safe.replace(/"/g,'""')+'"';
     rows.push([escaped,latest.tau,v.n,v.events,v.censored,v.rmst,v.rmtl].join(","));
   }
   const blob=new Blob([rows.join("\r\n")+"\r\n"],{type:"text/csv;charset=utf-8"});
